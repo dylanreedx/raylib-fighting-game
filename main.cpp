@@ -2,6 +2,7 @@
 
 #include <cmath>  // For sqrtf
 
+#include "./Collision/Collision.hpp"
 #include "./Follower/Follower.hpp"
 #include "./Player/Player.hpp"
 #include "./World/World.hpp"
@@ -24,56 +25,35 @@ int main() {
 
     SetTargetFPS(120);
 
+    // Main game loop
     while (!WindowShouldClose()) {
         float deltaTime = GetFrameTime();
 
-        // Update logic
-        player1.Update(world, deltaTime);  // Update Player 1
-        // Player 2 remains static (no Update call)
-
-        // Handle Collision Between Player 1 and Player 2
-        bool isColliding =
-            player1.position.x < player2.position.x + player2.size &&
-            player1.position.x + player1.size > player2.position.x &&
-            player1.position.y < player2.position.y + player2.size &&
-            player1.position.y + player1.size > player2.position.y;
-
-        if (isColliding) {
-            Vector2 collisionDirection = {
-                player1.position.x - player2.position.x,
-                player1.position.y - player2.position.y};
-
-            // Normalize the direction vector
-            float collisionMagnitude = sqrtf(collisionDirection.x * collisionDirection.x +
-                                             collisionDirection.y * collisionDirection.y);
-            if (collisionMagnitude != 0) {
-                collisionDirection.x /= collisionMagnitude;
-                collisionDirection.y /= collisionMagnitude;
-
-                float overlap = player1.size - collisionMagnitude;
-                if (overlap < 0) overlap = 0;  // Avoid negative overlap
-
-                // Apply a small push to separate the players
-                float pushStrength = overlap + 1.0f;
-                player1.position.x += collisionDirection.x * pushStrength;
-                player1.position.y += collisionDirection.y * pushStrength;
-
-                player2.position.x -= collisionDirection.x * pushStrength;
-                player2.position.y -= collisionDirection.y * pushStrength;
-            }
-        }
-
-        // Update follower position
+        // Update Players
+        player1.Update(world, deltaTime);
         follower.Update(player1, player2);
 
-        // Draw everything
+        // Handle collision between Player 1 and Player 2
+        Collision::HandlePlayerCollision(player1, player2, world);
+
+        // Allow Player 1 to attack continuously with KEY_E
+        if (IsKeyDown(KEY_E)) {
+            player1.Attack();
+        }
+
+        // // Check if Player 1's attack hits Player 2
+        // if (CollisionManager::CheckAttackCollision(player1, player2)) {
+        //     DrawText("HIT!", 400, 300, 20, RED);  // Debug feedback for successful hit
+        // }
+
+        // Draw Everything
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        world.Draw();     // Draw the world
-        player1.Draw();   // Draw Player 1
-        player2.Draw();   // Draw Player 2
-        follower.Draw();  // Draw the follower
+        world.Draw();
+        player1.Draw();
+        follower.Draw();
+        player2.Draw();
 
         EndDrawing();
     }

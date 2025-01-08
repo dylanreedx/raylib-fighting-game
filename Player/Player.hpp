@@ -24,8 +24,15 @@ class Player {
 
     Player(Vector2 startPosition);
 
+    // Combat
+    bool isPunching = false;
+    float punchCooldown = 0.5f;  // Cooldown in seconds
+    float punchTimer = 0.0f;
+    Rectangle punchHitbox;  // The punch hitbox
+
     void Update(World& world, float deltaTime);  // Player logic (movement, physics)
-    void Draw();                                 // Render the player
+    void Attack();
+    void Draw();  // Render the player
 };
 
 #endif

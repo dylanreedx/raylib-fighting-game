@@ -46,6 +46,21 @@ void Player::Update(World& world, float deltaTime) {
         }
     }
 
+    // Update punch timer
+    if (punchTimer > 0.0f) {
+        punchTimer -= deltaTime;
+    } else {
+        isPunching = false;
+    }
+
+    // Update punch hitbox
+    if (isPunching) {
+        punchHitbox.x = position.x + (velocity.x >= 0 ? size : -size / 2.0f);  // Extend hitbox in facing direction
+        punchHitbox.y = position.y;
+    } else {
+        punchHitbox = {0, 0, 0, 0};  // Disable hitbox when not punching
+    }
+
     // Gravity
     if (!onGround) velocity.y += world.gravity * deltaTime;
 
@@ -73,6 +88,24 @@ void Player::Update(World& world, float deltaTime) {
     }
 }
 
+void Player::Attack() {
+    if (punchTimer <= 0.0f) {  // Allow punching after cooldown
+        isPunching = true;
+        punchTimer = punchCooldown;  // Reset cooldown timer
+
+        // Set initial hitbox position and size
+        punchHitbox = {position.x + (velocity.x >= 0 ? size : -size / 2.0f),
+                       position.y,
+                       size / 2.0f,
+                       size / 2.0f};  // Example punch size
+    }
+}
+
 void Player::Draw() {
     DrawRectangleV(position, {size, size}, BLUE);
+
+    // Draw punch hitbox for debugging
+    if (isPunching) {
+        DrawRectangleRec(punchHitbox, RED);
+    }
 }
